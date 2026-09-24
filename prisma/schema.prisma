@@ -3,55 +3,45 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// 1. Entidade Profile (Perfil do Desenvolvedor)
 model Profile {
   id        Int       @id @default(autoincrement())
   name      String
   email     String    @unique
   bio       String?
   githubUrl String
-  
-  // Relacionamento 1 : N (Um perfil possui vários projetos)
+  createdAt DateTime  @default(now())
   projects  Project[]
 }
 
-// 2. Entidade Project (Projeto)
 model Project {
   id            Int          @id @default(autoincrement())
   title         String
   description   String
   repositoryUrl String
-  
-  // Chave estrangeira ligando ao Profile
+  upvotes       Int          @default(0)
+  averageRating Float        @default(0)
   profileId     Int
   profile       Profile      @relation(fields: [profileId], references: [id])
-  
-  // Relacionamento 1 : N (Um projeto possui vários feedbacks)
+  technologies  Technology[] @relation("ProjectTechnologies")
   feedbacks     Feedback[]
-  
-  // Relacionamento N : N (Vários projetos usam várias tecnologias)
-  technologies  Technology[]
+  createdAt     DateTime     @default(now())
 }
 
-// 3. Entidade Technology (Tecnologia)
 model Technology {
   id       Int       @id @default(autoincrement())
   name     String    @unique
-  
-  // Relacionamento N : N (Uma tecnologia está em vários projetos)
-  projects Project[]
+  projects Project[] @relation("ProjectTechnologies")
 }
 
-// 4. Entidade Feedback (Opinião)
 model Feedback {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   comment   String
-  
-  // Chave estrangeira ligando ao Project
+  rating    Int      @default(5)
   projectId Int
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
 }
